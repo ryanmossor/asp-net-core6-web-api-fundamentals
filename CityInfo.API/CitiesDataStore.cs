@@ -7,7 +7,7 @@ namespace CityInfo.API
 	{
 		public List<CityDto> Cities { get; set; }
 		// singleton property Current returns instance of CitiesDataStore
-		public static CitiesDataStore Current { get; } = new CitiesDataStore();
+		//public static CitiesDataStore Current { get; } = new CitiesDataStore();
 
 		public CitiesDataStore()
 		{

@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.StaticFiles;
+﻿using CityInfo.API;
+using CityInfo.API.Services;
+using Microsoft.AspNetCore.StaticFiles;
 using Serilog;
 
 Log.Logger = new LoggerConfiguration()
@@ -8,7 +10,7 @@ Log.Logger = new LoggerConfiguration()
     .CreateLogger();
 
 // We're building a web app which needs to be hosted. To do this, a WebApplicationBuilder can be used
-var builder = WebApplication.CreateBuilder(args);
+var builder = WebApplication.CreateBuilder(args); // adds config from appsettings.json and appsettings.{env.EnvironmentName}.json
 
 builder.Host.UseSerilog();
 
@@ -22,6 +24,20 @@ builder.Services.AddControllers(options =>
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+// AddTransient: used for lightweight, stateless services
+// AddScoped: created once per request
+// AddSingleton: created on first request; same instance used for subsequent requests
+
+#if DEBUG
+builder.Services.AddTransient<IMailService, LocalMailService>();
+#else
+builder.Services.AddTransient<IMailService, CloudMailService>();
+#endif
+
+// creates singleton instance of CitiesDataStore, which can be injected into controller instances
+// rather than initialized as a singleton within the CitiesDataStore class
+builder.Services.AddSingleton<CitiesDataStore>();
 
 var app = builder.Build();
 
