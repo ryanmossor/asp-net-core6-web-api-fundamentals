@@ -1,5 +1,16 @@
-﻿// We're building a web app which needs to be hosted. To do this, a WebApplicationBuilder can be used
+﻿using Microsoft.AspNetCore.StaticFiles;
+using Serilog;
+
+Log.Logger = new LoggerConfiguration()
+    .MinimumLevel.Debug()
+    .WriteTo.Console()
+    .WriteTo.File("logs/cityinfo.txt", rollingInterval: RollingInterval.Day)
+    .CreateLogger();
+
+// We're building a web app which needs to be hosted. To do this, a WebApplicationBuilder can be used
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Host.UseSerilog();
 
 // Add services to the container (dependency injection)
 builder.Services.AddControllers(options =>
