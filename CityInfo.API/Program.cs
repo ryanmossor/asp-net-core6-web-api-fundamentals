@@ -1,6 +1,7 @@
 ﻿using CityInfo.API;
+using CityInfo.API.DbContexts;
 using CityInfo.API.Services;
-using Microsoft.AspNetCore.StaticFiles;
+using Microsoft.EntityFrameworkCore;
 using Serilog;
 
 Log.Logger = new LoggerConfiguration()
@@ -39,6 +40,10 @@ builder.Services.AddTransient<IMailService, CloudMailService>();
 // rather than initialized as a singleton within the CitiesDataStore class
 builder.Services.AddSingleton<CitiesDataStore>();
 
+// Register DB context using dependency injection
+builder.Services.AddDbContext<CityInfoContext>(dbContextOptions => dbContextOptions.UseSqlite(
+        builder.Configuration["ConnectionStrings:CityInfoDBConnectionString"])); // references ConnectionStrings.CityInfoDBConnectionString in appsettings.Development.json
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -56,9 +61,6 @@ app.UseAuthorization();
 
 //app.MapControllers();
 
-app.UseEndpoints(endpoints =>
-{
-    endpoints.MapControllers();
-});
+app.UseEndpoints(endpoints => endpoints.MapControllers());
 
 app.Run();
