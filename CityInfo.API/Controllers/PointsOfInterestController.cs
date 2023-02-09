@@ -1,13 +1,15 @@
 ﻿using AutoMapper;
 using CityInfo.API.Models;
 using CityInfo.API.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CityInfo.API.Controllers
 {
-    [Route("api/cities/{cityId}/pointsofinterest")]
     [ApiController]
+    [Authorize(Policy = "MustBeFromAntwerp")]
+    [Route("api/cities/{cityId}/pointsofinterest")]
     public class PointsOfInterestController : ControllerBase
     {
         private readonly ILogger<PointsOfInterestController> _logger;
@@ -36,6 +38,11 @@ namespace CityInfo.API.Controllers
         {
             try
             {
+                // Demo: only allow users to GET points of interests for the city in which they reside
+                //var userCityName = User.Claims.FirstOrDefault(c => c.Type == "city")?.Value;
+                //if (!(await _cityInfoRepository.CityNameMatchesCityId(userCityName, cityId)))
+                //    return Forbid();
+
                 if (!await _cityInfoRepository.CityExistsAsync(cityId))
                 {
                     _logger.LogInformation($"City with id {cityId} not found when accessing points of interest.");

@@ -15,6 +15,7 @@ namespace CityInfo.API.Services
         // Don't need to mark Delete method async since it's an in-memory op, not an I/O op.
         // Also doesn't call any async methods, although you could do this if you wanted. In that case, it needs to be marked async
         void DeletePointOfInterest(PointOfInterest pointOfInterest);
+        Task<bool> CityNameMatchesCityId(string? cityName, int cityId);
         Task<bool> SaveChangesAsync();
     }
 }
