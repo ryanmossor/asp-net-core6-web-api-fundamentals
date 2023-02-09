@@ -2,6 +2,7 @@
 using CityInfo.API.Models;
 using CityInfo.API.Services;
 using Microsoft.AspNetCore.Mvc;
+using System.Text.Json;
 
 namespace CityInfo.API.Controllers
 {
@@ -11,6 +12,7 @@ namespace CityInfo.API.Controllers
     {
         private readonly ICityInfoRepository _cityInfoRepository;
         private readonly IMapper _mapper;
+        const int maxCitiesPageSize = 20;
 
         public CitiesController(ICityInfoRepository cityInfoRepository, IMapper mapper)
         {
@@ -19,9 +21,22 @@ namespace CityInfo.API.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<CityWithoutPointsOfInterestDto>>> GetCities()
+        // if query string param doesn't have same name as key in query string, can pass key name from query string,
+        // can pass through the key name from query string using the name property on the FromQuery attribute
+        // e.g., [FromQuery(Name = "filteronname")]
+        public async Task<ActionResult<IEnumerable<CityWithoutPointsOfInterestDto>>> GetCities(
+            [FromQuery] string? name,
+            [FromQuery] string? searchQuery,
+            [FromQuery] int pageNumber = 1,
+            [FromQuery] int pageSize = 10) 
         {
-            var cityEntities = await _cityInfoRepository.GetCitiesAsync();
+            if (pageSize > maxCitiesPageSize)
+                pageSize = maxCitiesPageSize;
+
+            var (cityEntities, paginationMetadata) = await _cityInfoRepository.GetCitiesAsync(name, searchQuery, pageNumber, pageSize);
+
+            Response.Headers.Add("X-Pagination", JsonSerializer.Serialize(paginationMetadata));
+
             // Map cities returned from GetCitiesAsync() to CityWithoutPointsOfInterestDto objects to return to user
             return Ok(_mapper.Map<IEnumerable<CityWithoutPointsOfInterestDto>>(cityEntities));
         }

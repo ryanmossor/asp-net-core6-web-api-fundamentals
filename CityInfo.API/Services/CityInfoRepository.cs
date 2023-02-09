@@ -18,6 +18,42 @@ namespace CityInfo.API.Services
             return await _context.Cities.OrderBy(c => c.Name).ToListAsync();
         }
 
+        // This method returns a tuple of (IEnumerable<City>, PaginationMetadata)
+        public async Task<(IEnumerable<City>, PaginationMetadata)> GetCitiesAsync(
+            string? name, 
+            string? searchQuery, 
+            int pageNumber, 
+            int pageSize)
+        {
+            // collection to start from
+            var collection = _context.Cities as IQueryable<City>;
+
+            if (!string.IsNullOrWhiteSpace(name))
+            {
+                name = name.Trim();
+                collection = collection.Where(c => c.Name == name);
+            }
+
+            if (!string.IsNullOrWhiteSpace(searchQuery))
+            {
+                searchQuery = searchQuery.Trim();
+                collection = collection.Where(a => a.Name.Contains(searchQuery) 
+                    || (a.Description != null && a.Description.Contains(searchQuery)));
+            }
+
+            var totalItemCount = await collection.CountAsync();
+
+            var paginationMetadata = new PaginationMetadata(totalItemCount, pageSize, pageNumber);
+
+            var collectionToReturn = await collection.OrderBy(c => c.Name)
+                // implement paging last rather than paging on a subset of data that's already been filtered
+                .Skip(pageSize * (pageNumber - 1)) // skips first X results (e.g., skips first 80 results if pageSize is 20 and pageNumber is 5)
+                .Take(pageSize) // after skipping results in above step, only return number of results specified in pageSize (e.g., 20)
+                .ToListAsync();
+
+            return (collectionToReturn, paginationMetadata);
+        }
+
         public async Task<City?> GetCityAsync(int cityId, bool includePointsOfInterest)
         {
             if (includePointsOfInterest)
